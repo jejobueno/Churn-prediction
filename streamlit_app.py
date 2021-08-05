@@ -1,6 +1,9 @@
 import streamlit as st
 
-st.write(""""
-Churn client prediction""")
+from utils.dataProcessor import DataProcessor
 
+st.write("""
+# Churn client prediction""")
 
+dataProcessor = DataProcessor()
+dataProcessor.preprocess()

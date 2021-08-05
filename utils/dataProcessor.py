@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import streamlit as stl
 
 
 class DataProcessor:
@@ -13,6 +14,7 @@ class DataProcessor:
         # Deleting features with strong correlation between each other
         correlations = self.df.corr()
         correlated_features = set()
+        stl.pyplot()
 
         for i in range(len(correlations.columns)):
             for j in range(i):
@@ -58,7 +60,7 @@ class DataProcessor:
             sns.histplot(x=self.df[feature], ax=axes[1]).set_title('Histogram')
             plt.tight_layout()
             fig.suptitle('Analyzing ' + feature)
-            plt.show()
+            stl.pyplot()
 
         # Checking at categorical features
         features = ['Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category', 'Attrition_Flag']
@@ -70,4 +72,4 @@ class DataProcessor:
             plt.xticks(rotation=45)
             plt.tight_layout()
             fig.suptitle('Analyzing ' + feature)
-            plt.show()
+            stl.pyplot()
