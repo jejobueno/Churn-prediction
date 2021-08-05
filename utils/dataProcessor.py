@@ -14,7 +14,6 @@ class DataProcessor:
         # Deleting features with strong correlation between each other
         correlations = self.df.corr()
         correlated_features = set()
-        stl.pyplot()
 
         for i in range(len(correlations.columns)):
             for j in range(i):
@@ -27,9 +26,9 @@ class DataProcessor:
         # Checking the correlation matrix again
         plt.figure()
         correlations = self.df.corr()
-        sns.heatmap(correlations, center=0, annot=True, cmap="YlGnBu")
+        fig = sns.heatmap(correlations, center=0, annot=True, cmap="YlGnBu")
         plt.tight_layout()
-        plt.show()
+        stl.pyplot(fig)
 
         # Encode our target value 'Attrition_Flag'
         self.df.Attrition_Flag.replace({'Attrited Customer': 1, 'Existing Customer': 0}, inplace=True)
