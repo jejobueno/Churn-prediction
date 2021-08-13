@@ -3,9 +3,6 @@ from pathlib import Path
 
 import streamlit as st
 
-from utils.dataProcessor import DataProcessor
-
-
 @st.cache()
 def img_to_bytes(img_path):
     img_bytes = Path(img_path).read_bytes()

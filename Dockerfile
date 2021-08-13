@@ -14,6 +14,4 @@ RUN pip install -r requirements.txt
 
 EXPOSE ${MY_SERVICE_PORT}:5000
 
-ENTRYPOINT ["python3"]
-
-CMD ["app.py"]
+CMD streamlit run --server.port=${PORT} --server.address "0.0.0.0" --server.headless true app.py

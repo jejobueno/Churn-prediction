@@ -1,11 +1,4 @@
-import base64
-from pathlib import Path
-
-import pandas as pd
 import streamlit as st
-import package.awesome_streamlit as ast
-import plotly.figure_factory as ff
-
 
 def write():
     dataProcessor = st.session_state.dataProcessor
@@ -13,10 +6,10 @@ def write():
     header = st.beta_container()
     expander = st.beta_expander('Click here to check the df.info()', expanded=False)
 
-    visualize_categoricals = st.beta_container()
+    visualize_quantitatives = st.beta_container()
     expander_box = st.beta_expander('Click here to check the box plot and histogram', expanded=False)
 
-    visualize_quantitatives = st.beta_container()
+    visualize_categoricals = st.beta_container()
     expander_pie = st.beta_expander('Click here to check the pie chart', expanded=False)
     expander_hist = st.beta_expander('Click here to check the histogram', expanded=False)
 

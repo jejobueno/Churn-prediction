@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from utils.dataProcessor import DataProcessor
 
 @st.cache
 def img_to_bytes(img_path):

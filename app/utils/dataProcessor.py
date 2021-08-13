@@ -7,7 +7,7 @@ import streamlit as st
 
 class DataProcessor:
     def __init__(self):
-        self.df_org = pd.read_csv('data/BankChurners.csv')
+        self.df_org = pd.read_csv('./data/BankChurners.csv')
         # According with the specifications we delete the las two columns Naive Bayes
         self.df_org = self.df_org.drop([
             'Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1',

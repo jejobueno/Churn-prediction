@@ -16,8 +16,8 @@ def buildDataProcessor():
 
 @st.cache(allow_output_mutation=True)
 def buildPredictor():
-    #return joblib.load('utils/model/model.pkl')
-    return Predictor()
+    return joblib.load('utils/model/model.pkl')
+    #return Predictor()
 
 
 ast.core.services.other.set_logging_format()
