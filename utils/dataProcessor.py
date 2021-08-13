@@ -2,73 +2,94 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import streamlit as stl
+import streamlit as st
 
 
 class DataProcessor:
     def __init__(self):
-        self.df = pd.read_csv('data/BankChurners.csv')
+        self.df_org = pd.read_csv('data/BankChurners.csv')
+        # According with the specifications we delete the las two columns Naive Bayes
+        self.df_org = self.df_org.drop([
+            'Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1',
+            'Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2'],
+            axis=1)
+        self.df = self.df_org.copy()
+        self.df_processed = pd.DataFrame()
 
     def preprocess(self):
-        #self.analyze()
-        # Deleting features with strong correlation between each other
-        correlations = self.df.corr()
-        correlated_features = set()
+        self.analyze()
+        df = self.df
 
-        for i in range(len(correlations.columns)):
-            for j in range(i):
-                if abs(correlations.iloc[i, j]) > 0.8:
-                    colname = correlations.columns[i]
-                    correlated_features.add(colname)
+        df.drop(['CLIENTNUM'], axis=1, inplace=True)
+        df.Attrition_Flag.replace({'Attrited Customer': 1, 'Existing Customer': 0}, inplace=True)
+        df.Gender.replace({'F': 1, 'M': 0}, inplace=True)
 
-        self.df.drop(correlated_features, axis=1, inplace=True)
+        # Cheking the correlation matrix and the spearman correlation to delete
+        # most correlated features
+        correlations = df.corr()
+        spearman_correlation = df.corr(method='spearman')
 
-        # Checking the correlation matrix again
-        plt.figure()
-        correlations = self.df.corr()
-        fig = sns.heatmap(correlations, center=0, annot=True, cmap="YlGnBu")
-        plt.tight_layout()
-        stl.pyplot(fig)
+        # Here we are going to select the variables with the stronger relation
+        # in between to after select which one to drop
+        upper_tri = correlations.where(np.triu(np.ones(correlations.shape), k=1).astype(np.bool))
+        to_drop = [column for column in upper_tri.columns if any(upper_tri[column] > 0.7)]
+        to_drop_row = [upper_tri.index[upper_tri[feature] == correlation][0] for feature in to_drop for correlation in
+                       upper_tri[feature] if correlation > 0.7]
 
-        # Encode our target value 'Attrition_Flag'
-        self.df.Attrition_Flag.replace({'Attrited Customer': 1, 'Existing Customer': 0}, inplace=True)
-        self.df.Gender.replace({'F': 1, 'M': 0}, inplace=True)
-        to_dummies_features = ['Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category']
+        for i in range(len(to_drop)):
+            if spearman_correlation['Attrition_Flag'][to_drop_row[i]] > spearman_correlation['Attrition_Flag'][
+                to_drop[i]]:
+                df.drop(to_drop[i], axis=1, inplace=True)
+            else:
+                df.drop(to_drop_row[i], axis=1, inplace=True)
 
-        for feature in to_dummies_features:
-            cv_dummies = pd.get_dummies(self.df[feature])
-            self.df = pd.concat([self.df, cv_dummies], axis=1)
-            del self.df[feature]
+        # Encode our categorical values
+        cv_dummies = pd.get_dummies(df)
+
+        return cv_dummies
 
     def analyze(self):
         # Check if there is any nan values
         print('Missing values:', self.df.isna().sum().sum())
 
-        # Now let's see the correlation:
-        correlations = self.df.corr()
-        sns.heatmap(correlations, center=0, annot=True, cmap="YlGnBu")
+    def plot_pie(self, feature: str):
+        fig = plt.figure()
+        data = self.df.groupby(feature).size()
+        data.plot.pie(autopct="%.1f%%", pctdistance=0.5).set_title(feature + ' pie chart')
+        st.pyplot(fig)
+
+    def plot_hist(self, feature: str):
+        fig = plt.figure()
+        sns.histplot(x=self.df[feature], hue=self.df['Attrition_Flag']).set_title(feature + ' Histogram')
+        plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.show()
+        st.pyplot(fig)
 
-        # Checking normality is variables
-        features = ['Customer_Age', 'Months_on_book', 'Total_Relationship_Count', 'Dependent_count',
-                    'Avg_Utilization_Ratio', 'Months_Inactive_12_mon', 'Total_Trans_Amt', 'Credit_Limit']
-        for feature in features:
-            fig, axes = plt.subplots(2, 1)
-            sns.boxplot(x=self.df[feature], showmeans=True, ax=axes[0]).set_title('Box Plot')
-            sns.histplot(x=self.df[feature], ax=axes[1]).set_title('Histogram')
-            plt.tight_layout()
-            fig.suptitle('Analyzing ' + feature)
-            stl.pyplot()
+    def plot_box(self, feature):
+        fig, axes = plt.subplots(2, 1)
+        sns.boxplot(x=self.df[feature], showmeans=True, ax=axes[0]).set_title(feature + ' Box Plot')
+        sns.histplot(x=self.df[feature], hue=self.df['Attrition_Flag'], ax=axes[1]).set_title(feature + 'Histogram')
+        plt.tight_layout()
+        st.pyplot(fig)
 
-        # Checking at categorical features
-        features = ['Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category', 'Attrition_Flag']
-        for feature in features:
-            fig, axes = plt.subplots(1, 2)
-            data = self.df.groupby(feature)['CLIENTNUM'].count()
-            data.plot.pie(autopct="%.1f%%", ax=axes[0])
-            sns.histplot(x=self.df[feature], ax=axes[1]).set_title('Histogram')
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            fig.suptitle('Analyzing ' + feature)
-            stl.pyplot()
+    def plot_correlation(self):
+        df = self.df.copy()
+        df.drop(['CLIENTNUM'], axis=1, inplace=True)
+        df.Attrition_Flag.replace({'Attrited Customer': 1, 'Existing Customer': 0}, inplace=True)
+        df.Gender.replace({'F': 1, 'M': 0}, inplace=True)
+
+        matrix = np.triu(df.corr())
+        correlations = df.corr()
+
+        fig = plt.figure(figsize=(8, 6), dpi=80)
+        sns.heatmap(correlations, cmap="YlGnBu", annot=True, fmt='.1g', vmin=-1, vmax=1, center=0, mask=matrix,
+                    cbar=False)
+        st.pyplot(fig)
+
+        spearman_correlation = df.corr(method='spearman')
+        fig = plt.figure(figsize=(8, 6), dpi=80)
+        sns.heatmap(spearman_correlation, cmap="YlGnBu", annot=True, fmt='.1g', vmin=-1, vmax=1, center=0, mask=matrix,
+                    cbar=False)
+        st.pyplot(fig)
+
+

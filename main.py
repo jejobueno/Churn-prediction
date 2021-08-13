@@ -2,7 +2,7 @@ from utils.Predictor import Predictor
 from utils.dataProcessor import DataProcessor
 
 dataProcessor = DataProcessor()
-dataProcessor.preprocess()
+dataProcessor.plot_correlation()
 
-predictor = Predictor(dataProcessor.df)
-predictor.predict()
+predictor = Predictor()
+predictor.trainModel(dataProcessor.preprocess())
